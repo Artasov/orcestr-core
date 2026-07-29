@@ -1,0 +1,54 @@
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# IDE and operating-system files
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.swp
+*.swo
+*~
+
+# Python environments, caches and build artifacts
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.pyre/
+.hypothesis/
+.tox/
+.nox/
+.coverage
+.coverage.*
+htmlcov/
+build/
+dist/
+*.egg-info/
+.package-smoke/
+
+# Node.js dependencies, caches and build artifacts
+node_modules/
+.local-packages/
+.next/
+.turbo/
+.cache/
+coverage/
+.nyc_output/
+*.tsbuildinfo
+*.tgz
+
+# Local logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*

@@ -1,0 +1,39 @@
+{
+  "name": "@orcestr/core-react",
+  "version": "0.1.0",
+  "description": "React and React Query error presentation adapters for Orcestr.",
+  "author": "Artasov",
+  "license": "MPL-2.0",
+  "keywords": ["api", "errors", "orcestr", "react", "react-query"],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Artasov/orcestr-core.git",
+    "directory": "frontend/packages/core-react"
+  },
+  "homepage": "https://github.com/Artasov/orcestr-core/tree/main/frontend/packages/core-react#readme",
+  "bugs": {
+    "url": "https://github.com/Artasov/orcestr-core/issues"
+  },
+  "type": "module",
+  "sideEffects": false,
+  "files": ["dist", "README.md", "README.ru.md", "LICENSE", "NOTICE", "TRADEMARKS.md"],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc -b"
+  },
+  "dependencies": {
+    "@orcestr/core": "0.1.0"
+  },
+  "peerDependencies": {
+    "@tanstack/react-query": "^5.0.0",
+    "react": "^18.0.0 || ^19.0.0"
+  }
+}

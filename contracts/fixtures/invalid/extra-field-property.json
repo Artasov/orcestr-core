@@ -1,0 +1,13 @@
+{
+  "error": {
+    "code": "validation_error",
+    "message": "Check the submitted fields.",
+    "fields": [
+      {
+        "path": ["items", 0, "sku"],
+        "code": "required",
+        "legacy": true
+      }
+    ]
+  }
+}

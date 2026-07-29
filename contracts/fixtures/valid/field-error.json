@@ -1,0 +1,21 @@
+{
+  "error": {
+    "code": "validation_error",
+    "message": "Check the submitted fields.",
+    "fields": [
+      {
+        "path": ["items", 0, "quantity"],
+        "code": "greater_than_or_equal",
+        "message": "Quantity must be at least 1.",
+        "params": {
+          "minimum": 1
+        }
+      }
+    ],
+    "details": {
+      "operation": "create_order"
+    },
+    "request_id": "01JTESTREQUEST"
+  }
+}
+

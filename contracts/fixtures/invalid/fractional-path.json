@@ -1,0 +1,12 @@
+{
+  "error": {
+    "code": "validation_error",
+    "message": "Check the submitted fields.",
+    "fields": [
+      {
+        "path": ["items", 1.5, "quantity"],
+        "code": "invalid_path"
+      }
+    ]
+  }
+}

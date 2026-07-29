@@ -1,0 +1,173 @@
+name: Publish npm package
+run-name: Publish npm package - ${{ inputs.package && format('core-{0}-v{1}', inputs.package, inputs.version) || github.ref_name }}
+
+on:
+  push:
+    tags:
+      - 'core-v*'
+      - 'core-react-v*'
+      - 'core-next-v*'
+  workflow_dispatch:
+    inputs:
+      package:
+        description: npm package to publish
+        required: true
+        type: choice
+        options:
+          - core
+          - react
+          - next
+      version:
+        description: Existing package tag version to publish
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  resolve:
+    name: Resolve npm release
+    runs-on: ubuntu-latest
+    outputs:
+      package_dir: ${{ steps.release.outputs.package_dir }}
+      package_name: ${{ steps.release.outputs.package_name }}
+      tag: ${{ steps.release.outputs.tag }}
+      version: ${{ steps.release.outputs.version }}
+    steps:
+      - id: release
+        name: Resolve package and version from tag
+        shell: bash
+        env:
+          DISPATCH_PACKAGE: ${{ inputs.package }}
+          DISPATCH_VERSION: ${{ inputs.version }}
+        run: |
+          if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" ]]; then
+            if [[ "$DISPATCH_PACKAGE" == "core" ]]; then
+              release_ref="core-v${DISPATCH_VERSION}"
+            else
+              release_ref="core-${DISPATCH_PACKAGE}-v${DISPATCH_VERSION}"
+            fi
+          else
+            release_ref="$GITHUB_REF_NAME"
+          fi
+
+          case "$release_ref" in
+            core-v*)
+              package_dir="frontend/packages/core"
+              package_name="@orcestr/core"
+              version="${release_ref#core-v}"
+              ;;
+            core-react-v*)
+              package_dir="frontend/packages/core-react"
+              package_name="@orcestr/core-react"
+              version="${release_ref#core-react-v}"
+              ;;
+            core-next-v*)
+              package_dir="frontend/packages/core-next"
+              package_name="@orcestr/core-next"
+              version="${release_ref#core-next-v}"
+              ;;
+            *)
+              echo "Unsupported release tag: $release_ref" >&2
+              exit 1
+              ;;
+          esac
+
+          if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Unsupported release version: $version" >&2
+            exit 1
+          fi
+
+          echo "package_dir=$package_dir" >> "$GITHUB_OUTPUT"
+          echo "package_name=$package_name" >> "$GITHUB_OUTPUT"
+          echo "tag=$release_ref" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+  verify:
+    name: Verify ${{ needs.resolve.outputs.package_name }}
+    needs: resolve
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.resolve.outputs.tag }}
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Check package version against tag
+        shell: bash
+        env:
+          EXPECTED: ${{ needs.resolve.outputs.version }}
+          PACKAGE_JSON: ${{ needs.resolve.outputs.package_dir }}/package.json
+        run: |
+          node - <<'NODE'
+          const fs = require('node:fs');
+
+          const manifest = JSON.parse(fs.readFileSync(`../${process.env.PACKAGE_JSON}`, 'utf8'));
+          if (manifest.version !== process.env.EXPECTED) {
+            throw new Error(`Package version ${manifest.version} does not match tag ${process.env.EXPECTED}`);
+          }
+          NODE
+      - name: Install, test and build workspace
+        working-directory: frontend
+        run: |
+          npm ci
+          npm test
+      - name: Inspect target package tarball
+        working-directory: frontend
+        env:
+          PACKAGE_NAME: ${{ needs.resolve.outputs.package_name }}
+        run: npm pack --dry-run --workspace "$PACKAGE_NAME"
+
+  publish:
+    name: Publish ${{ needs.resolve.outputs.package_name }}
+    needs: [resolve, verify]
+    runs-on: ubuntu-latest
+    environment: npm
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.resolve.outputs.tag }}
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
+      - name: Install and build
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run build
+      - name: Publish target package
+        working-directory: frontend
+        env:
+          PACKAGE_NAME: ${{ needs.resolve.outputs.package_name }}
+        run: npm publish --workspace "$PACKAGE_NAME" --access public --provenance
+
+  github-release:
+    name: Create npm GitHub release
+    needs: [resolve, publish]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+      - name: Create release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PACKAGE_NAME: ${{ needs.resolve.outputs.package_name }}
+          TAG: ${{ needs.resolve.outputs.tag }}
+          VERSION: ${{ needs.resolve.outputs.version }}
+        run: |
+          package_url="https://www.npmjs.com/package/${PACKAGE_NAME}/v/${VERSION}"
+          gh release create "$TAG" \
+            --verify-tag \
+            --title "${PACKAGE_NAME} v${VERSION}" \
+            --notes "npm: ${package_url}" \
+            --generate-notes

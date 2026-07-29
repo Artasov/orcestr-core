@@ -1,0 +1,32 @@
+{
+  "name": "@orcestr/core",
+  "version": "0.1.0",
+  "description": "Framework-independent API, error and navigation primitives for Orcestr.",
+  "author": "Artasov",
+  "license": "MPL-2.0",
+  "keywords": ["api", "errors", "orcestr", "typescript"],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Artasov/orcestr-core.git",
+    "directory": "frontend/packages/core"
+  },
+  "homepage": "https://github.com/Artasov/orcestr-core/tree/main/frontend/packages/core#readme",
+  "bugs": {
+    "url": "https://github.com/Artasov/orcestr-core/issues"
+  },
+  "type": "module",
+  "sideEffects": false,
+  "files": ["dist", "README.md", "README.ru.md", "LICENSE", "NOTICE", "TRADEMARKS.md"],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsc -b"
+  }
+}

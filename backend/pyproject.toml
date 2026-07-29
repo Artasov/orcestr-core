@@ -1,0 +1,60 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "orcestr-core"
+version = "0.1.0"
+description = "Shared API errors, request context and framework adapters for Orcestr."
+readme = "README.md"
+requires-python = ">=3.12,<4"
+license = "MPL-2.0"
+license-files = ["LICENSE", "NOTICE", "TRADEMARKS.md"]
+authors = [{name = "Artasov"}]
+keywords = ["api", "errors", "fastapi", "orcestr"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Framework :: FastAPI",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+]
+dependencies = [
+    "pydantic>=2.12,<3",
+]
+
+[project.optional-dependencies]
+fastapi = ["fastapi>=0.128,<1"]
+all = ["fastapi>=0.128,<1"]
+
+[project.urls]
+Homepage = "https://orcestr.com"
+Repository = "https://github.com/Artasov/orcestr-core"
+Documentation = "https://github.com/Artasov/orcestr-core#readme"
+Issues = "https://github.com/Artasov/orcestr-core/issues"
+
+[dependency-groups]
+dev = [
+    "fastapi>=0.128,<1",
+    "httpx2>=2,<3",
+    "pytest>=9,<10",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/orcestr_core"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "src/orcestr_core",
+    "tests",
+    "README.md",
+    "README.ru.md",
+    "LICENSE",
+    "NOTICE",
+    "TRADEMARKS.md",
+    "pyproject.toml",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

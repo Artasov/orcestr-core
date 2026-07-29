@@ -1,0 +1,83 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://orcestr.com/schemas/api-error.schema.json",
+  "title": "Orcestr API error response",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["error"],
+  "properties": {
+    "error": {
+      "$ref": "#/$defs/error"
+    }
+  },
+  "$defs": {
+    "jsonPrimitive": {
+      "type": ["string", "number", "boolean", "null"]
+    },
+    "params": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/$defs/jsonPrimitive"
+      }
+    },
+    "pathPart": {
+      "type": ["string", "integer"]
+    },
+    "fieldError": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "code"],
+      "properties": {
+        "path": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/pathPart"
+          }
+        },
+        "code": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1
+        },
+        "params": {
+          "$ref": "#/$defs/params"
+        }
+      }
+    },
+    "error": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "message"],
+      "properties": {
+        "code": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1
+        },
+        "params": {
+          "$ref": "#/$defs/params"
+        },
+        "fields": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/fieldError"
+          }
+        },
+        "details": {
+          "type": "object"
+        },
+        "request_id": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    }
+  }
+}
+
