@@ -24,7 +24,7 @@ function request(origin, headers = {}) {
 
 test("request origin ignores forwarding headers unless proxy trust is explicit", () => {
   const incoming = request("https://internal:3000", {
-    "x-forwarded-host": "deliveries.orcestr.com",
+    "x-forwarded-host": "app.example.com",
     "x-forwarded-proto": "https",
   });
 
@@ -35,16 +35,16 @@ test("request origin ignores forwarding headers unless proxy trust is explicit",
 
 test("request origin resolves trusted proxy host and protocol", () => {
   const incoming = request("http://internal:3000", {
-    "x-forwarded-host": "deliveries.orcestr.com, proxy.internal",
+    "x-forwarded-host": "app.example.com, proxy.internal",
     "x-forwarded-proto": "https, http",
   });
 
   assert.equal(
     requestOrigin(incoming, {
       trustProxy: true,
-      allowedHosts: ["deliveries.orcestr.com"],
+      allowedHosts: ["app.example.com"],
     }),
-    "https://deliveries.orcestr.com",
+    "https://app.example.com",
   );
 });
 
@@ -57,21 +57,21 @@ test("request origin rejects untrusted and malformed forwarded hosts", () => {
     () =>
       requestOrigin(untrusted, {
         trustProxy: true,
-        allowedHosts: ["deliveries.orcestr.com"],
+        allowedHosts: ["app.example.com"],
       }),
     /not allowed/,
   );
 
-  const malformed = request("https://deliveries.orcestr.com", {
+  const malformed = request("https://app.example.com", {
     "x-forwarded-host": "evil.example/path",
     "x-forwarded-proto": "https",
   });
   assert.equal(
     requestOrigin(malformed, {
       trustProxy: true,
-      allowedHosts: ["deliveries.orcestr.com"],
+      allowedHosts: ["app.example.com"],
     }),
-    "https://deliveries.orcestr.com",
+    "https://app.example.com",
   );
 });
 
@@ -79,15 +79,15 @@ test("request origin uses only a validated allowed fallback", () => {
   const incoming = request("http://internal:3000");
   assert.equal(
     requestOrigin(incoming, {
-      allowedHosts: ["deliveries.orcestr.com"],
-      fallbackOrigin: "https://deliveries.orcestr.com",
+      allowedHosts: ["app.example.com"],
+      fallbackOrigin: "https://app.example.com",
     }),
-    "https://deliveries.orcestr.com",
+    "https://app.example.com",
   );
   assert.throws(
     () =>
       requestOrigin(incoming, {
-        allowedHosts: ["deliveries.orcestr.com"],
+        allowedHosts: ["app.example.com"],
         fallbackOrigin: "javascript:alert(1)",
       }),
     /fallbackOrigin/,
@@ -96,18 +96,18 @@ test("request origin uses only a validated allowed fallback", () => {
 
 test("Next redirect helpers retain safe internal paths on an allowed origin", () => {
   const incoming = request("http://internal:3000/current?tab=1", {
-    "x-forwarded-host": "deliveries.orcestr.com",
+    "x-forwarded-host": "app.example.com",
     "x-forwarded-proto": "https",
   });
   assert.equal(requestInternalPath(incoming), "/current?tab=1");
 
-  const response = internalRedirect(incoming, "/deliveries/overview", "/", {
+  const response = internalRedirect(incoming, "/dashboard/overview", "/", {
     trustProxy: true,
-    allowedHosts: ["deliveries.orcestr.com"],
+    allowedHosts: ["app.example.com"],
   });
   assert.equal(
     response.headers.get("location"),
-    "https://deliveries.orcestr.com/deliveries/overview",
+    "https://app.example.com/dashboard/overview",
   );
   assert.equal(response.status, 307);
 });

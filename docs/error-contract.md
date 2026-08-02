@@ -1,3 +1,7 @@
+<p align="right">
+  <strong>English</strong> · <a href="./error-contract.ru.md">Русский</a>
+</p>
+
 # API error contract
 
 Every controlled HTTP error uses one envelope:
@@ -23,7 +27,11 @@ Every controlled HTTP error uses one envelope:
 
 Rules:
 
-- `code` is a stable lowercase snake-case identifier owned by a domain.
+- `code` is a stable lowercase snake-case identifier owned by the consuming
+  application's domain layer. For example,
+  [Orcestr Auth](https://github.com/Artasov/orcestr-auth) owns
+  `invalid_credentials`, while an order module can own
+  `order_already_closed`.
 - `message` is a safe server-side diagnostic fallback, not a translation key.
 - `params` contains only primitive interpolation values.
 - `fields` is an ordered list and preserves multiple errors for one nested path.
@@ -31,5 +39,6 @@ Rules:
 - `request_id` correlates the response with server logs.
 - clients must reject legacy or malformed envelopes instead of guessing.
 - user-facing clients resolve known codes through the active locale catalog and
-  use a localized generic fallback for unknown codes.
-
+  use a localized generic fallback for unknown codes. A UI layer such as
+  [Orcestr UI](https://github.com/Artasov/orcestr-ui) decides whether to render
+  the result as a field error, alert or toast.
