@@ -60,38 +60,31 @@ form adapter.
 
 ## Глобальные уведомления TanStack Query
 
-Создайте один controller и подключите его к query и mutation caches:
+`ApiQueryProvider` создаёт отдельные query cache и controller для каждого корня приложения,
+в том числе каждого SSR-запроса. Не разделяйте модульный singleton между пользователями:
 
 ```tsx
 import type { ReactNode } from "react";
-import {
-  ErrorNotificationController,
-  ErrorNotificationProvider,
-  createMutationErrorHandler,
-  createQueryErrorHandler,
-} from "@orcestr/core-react";
-import { MutationCache, QueryCache, QueryClient, QueryClientProvider } from "@tanstack/react-query";
-
-const controller = new ErrorNotificationController({
-  resolve: (error) => ({ title: "Ошибка запроса", message: String(error) }),
-  notify: ({ title, message }) => console.error(`${title}: ${message}`),
-});
-
-const queryClient = new QueryClient({
-  queryCache: new QueryCache({ onError: createQueryErrorHandler(controller) }),
-  mutationCache: new MutationCache({ onError: createMutationErrorHandler(controller) }),
-});
+import { ApiQueryProvider } from "@orcestr/core-react";
 
 function QueryProviders({ children }: { children: ReactNode }) {
   return (
-    <QueryClientProvider client={queryClient}>
-      <ErrorNotificationProvider controller={controller}>{children}</ErrorNotificationProvider>
-    </QueryClientProvider>
+    <ApiQueryProvider
+      resolveError={(error) => ({ title: "Ошибка запроса", message: String(error) })}
+      notifyError={({ title, message }) => console.error(`${title}: ${message}`)}
+      defaultOptions={{ queries: { retry: false } }}
+    >
+      {children}
+    </ApiQueryProvider>
   );
 }
 ```
 
-В приложении замени `console.error` на адаптер toast или уведомлений.
+Замените `console.error` на адаптер уведомлений приложения. Каталоги ошибок, retry, auth и
+маршрутизация остаются продуктовыми настройками. `suppressQueryError(error)` отключает выбранные
+уведомления, не меняя состояние запроса. Resolver, sink и callback подавления обновляются при
+рендере без сброса кэша; `defaultOptions` применяется при создании клиента один раз за mount.
+Размещайте provider выше компонентов, которые могут приостанавливать рендер через Suspense.
 
 `ErrorNotificationController` запоминает обработанные объекты ошибок и не допускает повторные
 глобальные уведомления. Mutation с собственным `onError` считается обработанной локально. При
@@ -104,7 +97,7 @@ function QueryProviders({ children }: { children: ReactNode }) {
 | Контекст сообщений | `ErrorMessagesProvider`, `useErrorMessage` |
 | Ошибки полей | `useApiFieldErrors`, `useFirstApiFieldError`, `useFieldErrorMessage` |
 | Уведомления | `ErrorNotificationController`, `ErrorNotificationProvider`, `useErrorNotifications` |
-| TanStack Query | `createQueryErrorHandler`, `createMutationErrorHandler` |
+| TanStack Query | `ApiQueryProvider`, `createQueryErrorHandler`, `createMutationErrorHandler` |
 
 Визуальные компоненты, toast UI и router behavior остаются в приложении. Notification callback
 можно подключить к `useToast()` из [Orcestr UI](https://github.com/Artasov/orcestr-ui) или к

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.1
+
+- Added `ApiQueryProvider` with an isolated TanStack Query cache per application root.
+- Added reusable global error notification deduplication and product-defined suppression.
+- Documented the application/library ownership boundary for query defaults and UI notifications.
+
 ## 0.1.0
 
 - Introduced the shared API error envelope for TypeScript and Python.

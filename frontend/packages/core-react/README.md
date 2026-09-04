@@ -59,38 +59,31 @@ Use `useApiFieldErrors(error)` when a form adapter needs all fields grouped by J
 
 ## Global notifications with TanStack Query
 
-Create one controller and connect it to the query and mutation caches:
+Use `ApiQueryProvider` to own an isolated query cache and notification controller per
+application root (including each SSR request). Do not share a module-level client across users:
 
 ```tsx
 import type { ReactNode } from "react";
-import {
-  ErrorNotificationController,
-  ErrorNotificationProvider,
-  createMutationErrorHandler,
-  createQueryErrorHandler,
-} from "@orcestr/core-react";
-import { MutationCache, QueryCache, QueryClient, QueryClientProvider } from "@tanstack/react-query";
-
-const controller = new ErrorNotificationController({
-  resolve: (error) => ({ title: "Request failed", message: String(error) }),
-  notify: ({ title, message }) => console.error(`${title}: ${message}`),
-});
-
-const queryClient = new QueryClient({
-  queryCache: new QueryCache({ onError: createQueryErrorHandler(controller) }),
-  mutationCache: new MutationCache({ onError: createMutationErrorHandler(controller) }),
-});
+import { ApiQueryProvider } from "@orcestr/core-react";
 
 function QueryProviders({ children }: { children: ReactNode }) {
   return (
-    <QueryClientProvider client={queryClient}>
-      <ErrorNotificationProvider controller={controller}>{children}</ErrorNotificationProvider>
-    </QueryClientProvider>
+    <ApiQueryProvider
+      resolveError={(error) => ({ title: "Request failed", message: String(error) })}
+      notifyError={({ title, message }) => console.error(`${title}: ${message}`)}
+      defaultOptions={{ queries: { retry: false } }}
+    >
+      {children}
+    </ApiQueryProvider>
   );
 }
 ```
 
-Replace `console.error` with the application's toast or notification adapter.
+Replace `console.error` with the application's toast or notification adapter. Product error
+catalogs, retry rules, auth and routing remain application-owned. `suppressQueryError(error)`
+can suppress selected query notifications without changing query state. Resolver, sink and
+suppression callbacks update on render without resetting the cache; `defaultOptions` initializes
+the client once per mount. Mount this provider above any suspending children.
 
 `ErrorNotificationController` records handled error objects and prevents duplicate global
 notifications. A mutation with its own `onError` is considered locally handled. Call
@@ -103,7 +96,7 @@ notifications. A mutation with its own `onError` is considered locally handled. 
 | Message context | `ErrorMessagesProvider`, `useErrorMessage` |
 | Field messages | `useApiFieldErrors`, `useFirstApiFieldError`, `useFieldErrorMessage` |
 | Notifications | `ErrorNotificationController`, `ErrorNotificationProvider`, `useErrorNotifications` |
-| TanStack Query | `createQueryErrorHandler`, `createMutationErrorHandler` |
+| TanStack Query | `ApiQueryProvider`, `createQueryErrorHandler`, `createMutationErrorHandler` |
 
 UI rendering, toast components and router behavior remain consumer-owned. A consumer can connect
 the notification callback to [Orcestr UI](https://github.com/Artasov/orcestr-ui) `useToast()` or
