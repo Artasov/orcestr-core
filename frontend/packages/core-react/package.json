@@ -1,6 +1,6 @@
 {
   "name": "@orcestr/core-react",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "React and React Query error presentation adapters for Orcestr.",
   "author": "Artasov",
   "license": "MPL-2.0",
